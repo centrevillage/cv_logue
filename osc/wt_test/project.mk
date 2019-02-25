@@ -4,7 +4,7 @@
 
 PROJECT = wt_test
 
-UCSRC =
+UCSRC = wavetable.c
 
 UCXXSRC = wt_test.cpp
 

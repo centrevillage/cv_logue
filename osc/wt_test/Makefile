@@ -163,6 +163,9 @@ PRE_ALL:
 
 POST_ALL: package
 
+create_wavetable:
+	sh create_wavetable.sh
+
 $(OBJS): | $(BUILDDIR) $(OBJDIR) $(LSTDIR)
 
 $(BUILDDIR):

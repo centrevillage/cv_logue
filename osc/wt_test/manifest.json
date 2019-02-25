@@ -6,16 +6,11 @@
         "api" : "1.0-0",
         "dev_id" : 0,
         "prg_id" : 0,
-        "version" : "0.1-0",
+        "version" : "0.2-0",
         "name" : "wt_test",
-        "num_param" : 6,
+        "num_param" : 1,
         "params" : [
-            ["dummy0",    0, 100, "%"],
-            ["dummy1",    0, 100, "%"],
-            ["dummy2",    0, 100, "%"],
-            ["dummy3",    0, 100, "%"],
-            ["dummy4", -100, 100, "%"],
-            ["dummy5",    0, 10,  ""]            
+            ["wave",    0, 7, ""]
           ]
     }
 }
