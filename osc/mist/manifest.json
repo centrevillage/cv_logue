@@ -1,0 +1,21 @@
+{
+    "header" : 
+    {
+        "platform" : "minilogue-xd",
+        "module" : "osc",
+        "api" : "1.0-0",
+        "dev_id" : 0,
+        "prg_id" : 0,
+        "version" : "0.2-0",
+        "name" : "mist",
+        "num_param" : 6,
+        "params" : [
+            ["wave",        0, 63, ""],
+            ["bulr",        0, 100, "%"],
+            ["collapse",    0, 100, "%"],
+            ["freeze",      0, 100, "%"],
+            ["diff",        0, 100, "%"],
+            ["melt",        0, 100, "%"]
+          ]
+    }
+}
