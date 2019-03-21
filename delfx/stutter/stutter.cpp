@@ -13,6 +13,7 @@ static float loop_length_current;
 static uint32_t start_point;
 static float loop_index;
 static float loop_speed;
+static uint8_t is_buf_empty;
 
 static const float loop_length_smooth = 0.0f;
 
@@ -87,6 +88,7 @@ void DELFX_INIT(uint32_t platform, uint32_t api) {
   start_point = 0;
   loop_index = 0.0f;
   loop_speed = 1.0f;
+  is_buf_empty = 1;
 }
 
 void DELFX_PROCESS(float *xn, uint32_t frames) {
@@ -96,9 +98,11 @@ void DELFX_PROCESS(float *xn, uint32_t frames) {
   if (loop_length > 0.0f) {
     while (x != x_e) {
       loop_length_current = (1.0f - loop_length_smooth) * loop_length + loop_length_smooth * loop_length_current;
-      f32pair_t lr = buffer.readFrac(loop_index);
-      *x = lr.a;
-      *(x+1) = lr.b;
+      if (!is_buf_empty) {
+        f32pair_t lr = buffer.readFrac(loop_index);
+        *x = lr.a;
+        *(x+1) = lr.b;
+      }
       loop_index -= loop_speed;
       if (loop_index < 0.0f) {
         loop_index += loop_length_current;
@@ -108,6 +112,7 @@ void DELFX_PROCESS(float *xn, uint32_t frames) {
       x += 2;
     }
   } else {
+    is_buf_empty = 0;
     while (x != x_e) {
       buffer.write((f32pair_t){*x, *(x+1)});
       x += 2;
