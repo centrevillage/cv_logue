@@ -2,6 +2,8 @@
 #include "delayline.hpp"
 #include "biquad.hpp"
 
+#define BUFFER_SIZE 48000
+
 static dsp::DualDelayLine buffer;
 static float delay_time;
 static float delay_feedback;
@@ -12,8 +14,8 @@ static uint8_t is_pitch_shifter;
 static dsp::BiQuad filter_l, filter_r;
 static float resonance;
 static float cutoff;
+static const float fade_threshold_time = BUFFER_SIZE / 400;
 
-#define BUFFER_SIZE 48000
 static __sdram f32pair_t buffer_ram[BUFFER_SIZE];
 
 void DELFX_INIT(uint32_t platform, uint32_t api) {
@@ -40,6 +42,15 @@ void DELFX_PROCESS(float *xn, uint32_t frames) {
     f32pair_t lr = buffer.readFrac(buffer_index);
     *x = fx_softclipf(0.05f, (*x + filter_l.process_so(lr.a * delay_feedback)));
     *(x+1) = fx_softclipf(0.05f, *(x+1) + filter_r.process_so(lr.b * delay_feedback));
+    if (buffer_index < fade_threshold_time) {
+      float rate = (fade_threshold_time - buffer_index) / fade_threshold_time;
+      *x = (*x) * (1.0f - rate);
+      *(x+1) = (*(x+1)) * (1.0f - rate);
+    } else if (buffer_index >= (delay_time - fade_threshold_time)) {
+      float rate = (delay_time - buffer_index) / fade_threshold_time;
+      *x = (*x) * rate;
+      *(x+1) = (*(x+1)) * rate;
+    }
     buffer.write((f32pair_t){*x, *(x+1)});
     buffer_index -= pitch;
     buffer_index += 1.0f;
