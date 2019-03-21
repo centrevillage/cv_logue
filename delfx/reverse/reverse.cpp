@@ -2,14 +2,16 @@
 #include "delayline.hpp"
 #include "biquad.hpp"
 
+#define BUFFER_SIZE 96000
+
 static dsp::DualDelayLine buffer;
 static dsp::BiQuad filter_l, filter_r;
 static int32_t delay_time;
 static float delay_feedback;
 static int32_t buffer_index;
 static float cutoff;
+static const int32_t fade_threshold_time = BUFFER_SIZE / 1000;
 
-#define BUFFER_SIZE 96000
 static __sdram f32pair_t buffer_ram[BUFFER_SIZE];
 
 void DELFX_INIT(uint32_t platform, uint32_t api) {
@@ -32,6 +34,15 @@ void DELFX_PROCESS(float *xn, uint32_t frames) {
     f32pair_t lr = buffer.read(buffer_index);
     *x = fx_softclipf(0.05f, filter_l.process_so((*x) + lr.a * delay_feedback));
     *(x+1) = fx_softclipf(0.05f, filter_r.process_so((*(x+1)) + lr.b * delay_feedback));
+    if (buffer_index < fade_threshold_time) {
+      float rate = (float)(fade_threshold_time - buffer_index) / (float)fade_threshold_time;
+      *x = (*x) * (1.0f - rate);
+      *(x+1) = (*(x+1)) * (1.0f - rate);
+    } else if (buffer_index >= (delay_time - fade_threshold_time)) {
+      float rate = (float)(delay_time - buffer_index) / (float)fade_threshold_time;
+      *x = (*x) * rate;
+      *(x+1) = (*(x+1)) * rate;
+    }
     buffer.write((f32pair_t){*x, *(x+1)});
     buffer_index += 2;
     if (buffer_index < 0) {
