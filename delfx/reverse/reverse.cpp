@@ -19,7 +19,7 @@ void DELFX_INIT(uint32_t platform, uint32_t api) {
   delay_time = BUFFER_SIZE / 4;
   delay_feedback = 0.0f;
   buffer_index = 0;
-  cutoff = 0.2f;
+  cutoff = 0.45f;
   filter_l.flush();
   filter_l.mCoeffs.setPoleLP(1.f - (cutoff*2.f));
   filter_r.flush();
