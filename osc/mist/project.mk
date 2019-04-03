@@ -4,7 +4,7 @@
 
 PROJECT = mist
 
-UCSRC = mist.c wavetable.c
+UCSRC = mist.c wavetable.c delay.c quantizer.c
 
 UCXXSRC = 
 

@@ -1,1 +1,1 @@
-cd ../../ && bundle exec ruby script/wave_converter.rb osc/wt_test/res/wav osc/wt_test --format=src
+cd ../../ && bundle exec ruby script/wave_converter.rb osc/mist/res/wav osc/mist --format=src
