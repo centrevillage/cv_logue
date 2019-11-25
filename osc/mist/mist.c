@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_table.h"
 #include "userosc.h"
 #include "wavetable.h"
 #include "delay.h"
@@ -74,8 +75,11 @@ void OSC_INIT(uint32_t platform, uint32_t api) {
 void OSC_CYCLE(const user_osc_param_t * const params, int32_t *yn, const uint32_t frames) {
   // convert pitch(1 octave = 12 * 256 pitch value) to delta phase
   uint16_t pitch0 = params->pitch;
-  //uint16_t pitch1 = params->pitch + ((uint16_t)quantizer_process(pitch0 >> 8, state.pitch_diff) << 8);
-  uint16_t pitch1 = params->pitch + (((uint16_t)state.pitch_diff) << 8);
+  uint16_t pitch1 = params->pitch;
+  if (state.pitch_diff) {
+    pitch1 = ((uint16_t)quantizer_process(pitch0 >> 8, state.pitch_diff) << 8);
+  }
+  //uint16_t pitch1 = params->pitch + (((uint16_t)state.pitch_diff) << 8);
   const float w0 = state.w0 = osc_w0f_for_note(pitch0 >> 8, pitch0 & 0xFF);
   const float w1 = state.w1 = osc_w0f_for_note(pitch1 >> 8, pitch1 & 0xFF);
   q31_t * __restrict y = (q31_t *)yn;
@@ -143,11 +147,10 @@ void OSC_PARAM(uint16_t index, uint16_t value) {
     delay_feed = clipmaxf((float)value * 0.01f, 0.95f);
     break;
   case k_osc_param_id4:
-    // 0: no freeze, 1-: freeze time
     // collapse
     // sample rate reduction
-    state.sample_rate = clipminf(0.001f, (float)(100 - value) / 100.0f);
-    state.sample_rate_random = 0.001f * (float)value;
+    state.sample_rate = (1.0f - clipmaxf(common_logf((float)value / 100.0f), 1.0f)) * 0.96f + 0.04f;
+    state.sample_rate_random = 0.004f * (float)value;
   case k_osc_param_id5:
     // freeze
     // delay buffer hold
