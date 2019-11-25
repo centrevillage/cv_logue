@@ -8,12 +8,13 @@
         "prg_id" : 0,
         "version" : "0.3-0",
         "name" : "mist",
-        "num_param" : 4,
+        "num_param" : 5,
         "params" : [
             ["wave",        0, 7, ""],
             ["diff",        0, 24, ""],
             ["blur",        0, 100, "%"],
-            ["collapse",    0, 100, "%"]
+            ["collapse",    0, 100, "%"],
+            ["phase",       0, 100, "%"]
           ]
     }
 }

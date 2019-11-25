@@ -4,9 +4,9 @@
 
 PROJECT = mist
 
-UCSRC = mist.c wavetable.c delay.c quantizer.c common_table.c
+UCSRC = delay.c wavetable.c quantizer.c common_table.c
 
-UCXXSRC = 
+UCXXSRC = mist.cpp 
 
 UINCDIR =
 

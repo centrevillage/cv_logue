@@ -1,9 +1,13 @@
+extern "C" {
 #include "common.h"
 #include "common_table.h"
 #include "userosc.h"
 #include "wavetable.h"
 #include "delay.h"
 #include "quantizer.h"
+}
+
+#include "simplelfo.hpp"
 
 typedef struct State {
   float w0; // current delta phase for update
@@ -19,6 +23,7 @@ typedef struct State {
   float sample_rate;
   float sample_rate_random;
   float sample_phase;
+  float phase_lfo_speed;
   float sig;
 } State;
 
@@ -26,6 +31,7 @@ static float delay_feed = 0.0f;
 static const float delay_enhance_amp = 1.0f;
 
 static State state;
+static dsp::SimpleLFO phase_lfo;
 
 __fast_inline float wavetable_value_get(const int16_t* p_wt, float phase) {
   const float p = phase - (uint32_t)phase;
@@ -50,6 +56,8 @@ void delay_init() {
   delay_feed = 0.48f;
 }
 
+static const float s_fs_recip = 1.f / 48000.f;
+
 void OSC_INIT(uint32_t platform, uint32_t api) {
   state.w0 = 0.f;
   state.w1 = 0.f;
@@ -65,7 +73,9 @@ void OSC_INIT(uint32_t platform, uint32_t api) {
   state.sample_rate_random = 0.0f;
   state.sample_phase = 0.0f;
   state.sig = 0.0f;
-  
+  state.phase_lfo_speed = 0.0f;
+  phase_lfo.reset();
+
   delay_init();
 }
 
@@ -93,10 +103,16 @@ void OSC_CYCLE(const user_osc_param_t * const params, int32_t *yn, const uint32_
 
   for (; y != y_e; ) {
     sample_phase += state.sample_rate + (osc_white() * state.sample_rate * state.sample_rate_random);
+    phase_lfo.cycle();
+    float phase1_mod = phase1;
+    if (state.phase_lfo_speed > 0.0f) {
+      phase1_mod = phase1 + phase_lfo.sine_uni();
+      phase1_mod -= (uint32_t)phase1_mod;
+    }
     float sig;
     if (sample_phase >= 1.0f) {
       // calculate current signal value
-      sig = osc_softclipf(0.05f, wavetable_osc_get(phase0, phase1, lfoz));
+      sig = osc_softclipf(0.05f, wavetable_osc_get(phase0, phase1_mod, lfoz));
       state.sig = sig;
     } else {
       sig = state.sig;
@@ -152,8 +168,9 @@ void OSC_PARAM(uint16_t index, uint16_t value) {
     state.sample_rate = (1.0f - clipmaxf(common_logf((float)value / 100.0f), 1.0f)) * 0.96f + 0.04f;
     state.sample_rate_random = 0.004f * (float)value;
   case k_osc_param_id5:
-    // freeze
-    // delay buffer hold
+    // phase lfo
+    state.phase_lfo_speed = clipmaxf((float)value * 0.01f, 1.0f);
+    phase_lfo.setF0(state.phase_lfo_speed, s_fs_recip);
   case k_osc_param_id6:
     // melt
     // cross fade before note on pitch to current note on pitch (osc1, osc2)
